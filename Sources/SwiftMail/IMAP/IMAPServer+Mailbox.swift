@@ -23,6 +23,34 @@ extension IMAPServer {
     }
 
     /**
+     Rename (or move) an existing mailbox.
+
+     Renaming to a path with a different parent effectively moves the mailbox within
+     the hierarchy (IMAP has no dedicated move-folder command).
+
+     - Parameters:
+        - from: The current mailbox name/path.
+        - to: The new mailbox name/path.
+     - Throws: An error if the rename fails.
+     */
+    public func renameMailbox(_ from: String, to: String) async throws {
+        let command = RenameMailboxCommand(from: resolveMailboxPath(from),
+                                           to: resolveMailboxPath(to))
+        try await executeCommand(command)
+    }
+
+    /**
+     Delete an existing mailbox.
+
+     - Parameter mailboxName: The name/path of the mailbox to delete.
+     - Throws: An error if the delete fails.
+     */
+    public func deleteMailbox(_ mailboxName: String) async throws {
+        let command = DeleteMailboxCommand(mailboxName: resolveMailboxPath(mailboxName))
+        try await executeCommand(command)
+    }
+
+    /**
      Select a mailbox
 
      This method selects a mailbox and makes it the current mailbox for subsequent
