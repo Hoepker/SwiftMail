@@ -4,6 +4,38 @@
 import Foundation
 
 extension SMTPServer {
+
+    /// The name sent as the EHLO argument.
+    ///
+    /// RFC 5321 requires a Domain or an address-literal there — letters, digits,
+    /// hyphens and dots. A device name does not have to satisfy that: on iOS
+    /// `ProcessInfo.hostName` is derived from the user-chosen device name and may
+    /// carry spaces or non-ASCII ("Höpkers iPad"). A space turns `EHLO a b` into a
+    /// syntactically wrong command, and a strict server answers 501 — which the
+    /// client then reports as a connection failure, pointing at everything except
+    /// the real cause.
+    ///
+    /// A hostname that is already valid passes through untouched, so nothing
+    /// changes for the servers this works with today.
+    static func ehloHostname(_ raw: String = ProcessInfo.processInfo.hostName) -> String {
+        let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-")
+        let sanitized = String(raw.map { allowed.contains($0) ? $0 : "-" })
+            .split(separator: ".", omittingEmptySubsequences: true)
+            .map { label -> String in
+                var trimmed = label
+                while trimmed.first == "-" { trimmed = trimmed.dropFirst() }
+                while trimmed.last == "-" { trimmed = trimmed.dropLast() }
+                return String(trimmed)
+            }
+            .filter { !$0.isEmpty }
+            .joined(separator: ".")
+
+        // Nothing usable left (empty name, or only punctuation): `localhost` is a
+        // valid Domain and every server accepts it. Sending an empty argument
+        // would be a protocol error.
+        return sanitized.isEmpty ? "localhost" : sanitized
+    }
+
     /**
      Fetch server capabilities using EHLO command
 
@@ -19,7 +51,7 @@ extension SMTPServer {
      */
     @discardableResult
     public func fetchCapabilities() async throws -> [String] {
-        let command = EHLOCommand(hostname: ProcessInfo.processInfo.hostName)
+        let command = EHLOCommand(hostname: Self.ehloHostname())
 
         do {
             let response = try await executeCommand(command)

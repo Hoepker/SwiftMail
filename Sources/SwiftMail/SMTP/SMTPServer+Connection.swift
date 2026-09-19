@@ -298,7 +298,7 @@ extension SMTPServer {
         isTLSEnabled = true
 
         // Send EHLO again after STARTTLS and update capabilities
-        let ehloCommand = EHLOCommand(hostname: ProcessInfo.processInfo.hostName)
+        let ehloCommand = EHLOCommand(hostname: Self.ehloHostname())
         let rawResponse = try await executeCommand(ehloCommand)
 
         // Parse capabilities from raw response
