@@ -110,8 +110,10 @@ final class FetchMessageInfoHandler: BaseIMAPCommandHandler<[MessageInfo]>, IMAP
             "date",
             "message-id",
             "in-reply-to",
-            "references",
-            "reply-to"
+            "references"
+            // NOT "reply-to": `MessageInfo` has no dedicated field for it (the
+            // envelope's reply-to list is not mapped), so filtering it here dropped
+            // the header entirely. Clients need it to answer the right address.
         ]
 
         let referencesValue = allHeaders["references"]?.trimmingCharacters(in: .whitespacesAndNewlines)

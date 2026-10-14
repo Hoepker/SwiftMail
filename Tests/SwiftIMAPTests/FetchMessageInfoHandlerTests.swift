@@ -105,6 +105,7 @@ struct FetchMessageInfoHandlerTests {
         List-ID: <announcements.example.com>\r
         List-Unsubscribe: <https://example.com/unsubscribe>\r
         X-Newsletter-ID: 12345\r
+        Reply-To: "Support" <support@example.com>\r
         In-Reply-To: <root@example.com>\r
         References: <root@example.com>\r
         \r
@@ -132,6 +133,8 @@ struct FetchMessageInfoHandlerTests {
         #expect(infos[0].additionalFields?["x-newsletter-id"] == "12345")
         #expect(infos[0].additionalFields?["in-reply-to"] == nil)
         #expect(infos[0].additionalFields?["references"] == nil)
+        // Reply-To is not mapped from the envelope, so it must survive here.
+        #expect(infos[0].additionalFields?["reply-to"] == "\"Support\" <support@example.com>")
     }
 
     @Test
